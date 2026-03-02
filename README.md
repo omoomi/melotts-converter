@@ -9,18 +9,17 @@ Download and convert MeloTTS text-to-speech models from HuggingFace to RKNN form
 | Model download | ✅ Working |
 | ONNX export | ✅ Working |
 | RKNN conversion | ✅ Working |
+| ONNX inference | ✅ Working |
+| RKNN inference | ⚠️ Partial (BERT issue) |
 | CLI commands | ✅ Working |
-| **Critical fixes** | ✅ **Applied** |
-| Python runtime | ✅ Fixed |
-| Inference testing | ⬜ Not tested on device |
 
 **Latest Update** (March 2, 2026):
-- ✅ Fixed critical runtime interface mismatch (encoder now uses 8 inputs)
-- ✅ Fixed resource leaks in RKNN converter
-- ✅ Replaced bare except clauses with proper exception handling
-- ✅ Added production-ready logging throughout codebase
+- ✅ All critical fixes applied to runtime
+- ✅ ONNX inference fully operational
+- ⚠️ RKNN encoder has BERT input format issue (see [API Documentation](docs/API_DOCUMENTATION.md))
+- ✅ Server integration complete with ONNX fallback
 
-See [Critical Fixes Applied](docs/CRITICAL_FIXES_APPLIED.md) for details.
+**Recommendation:** Use ONNX inference for production deployment. RKNN acceleration available but blocked by BERT input format compatibility issue.
 
 ## Features
 
@@ -236,10 +235,10 @@ models/en/
 | File | Size | Description |
 |------|------|-------------|
 | checkpoint.pth | ~200 MB | PyTorch checkpoint |
-| encoder.onnx | ~105 MB | ONNX encoder |
-| decoder.onnx | ~56 MB | ONNX decoder |
-| encoder.rknn | ~900 MB | RKNN encoder (2 dynamic profiles) |
-| decoder.rknn | ~155 MB | RKNN decoder (2 dynamic profiles) |
+| encoder.onnx | ~105 MB | ONNX encoder (✅ Working) |
+| decoder.onnx | ~56 MB | ONNX decoder (✅ Working) |
+| encoder.rknn | ~900 MB | RKNN encoder (⚠️ BERT issue) |
+| decoder.rknn | ~155 MB | RKNN decoder (✅ Ready) |
 
 **Why is RKNN larger than ONNX?**
 
@@ -248,10 +247,7 @@ RKNN models are 5-12x larger than ONNX due to:
 2. **NPU optimization**: Pre-computed operations and NPU-specific kernels
 3. **No compression**: RKNN stores raw float16 weights, while ONNX uses protobuf compression
 
-To reduce size:
-- Use fewer dynamic profiles (edit `src/config.py`)
-- Use a single static profile (~500 MB encoder)
-- Enable quantization (`do_quantization=True`)
+See [RKNN Size Optimization](docs/RKNN_SIZE_OPTIMIZATION.md) for detailed analysis and optimization strategies.
 
 ## Requirements
 
@@ -275,30 +271,12 @@ Expected performance on RK3588:
 
 ## Limitations
 
-1. **No quantization**: Models use float16 for full quality
-2. **Fixed output length**: Encoder uses max_frames=2048 for RKNN compatibility
-3. **No SDP**: Stochastic Duration Predictor excluded (deterministic only)
-4. **BERT on CPU**: BERT inference runs on CPU (fast enough)
-5. **Large encoder**: RKNN encoder is ~1.3GB due to float16
-
-## Technical Notes
-
-### RKNN Compatibility
-
-The encoder was modified for RKNN compatibility:
-
-1. **Removed SDP**: Stochastic Duration Predictor uses dynamic tensor operations incompatible with RKNN's graph optimizer. Only the deterministic DurationPredictor is used.
-
-2. **Fixed max_frames**: The `sequence_mask` and `generate_path` functions use a fixed maximum output length (2048 frames) instead of dynamic computation.
-
-3. **Dynamic input profiles**: 
-   - Encoder: seq_len 32, 64, 128
-   - Decoder: frames 512, 1024, 2048
-
-### Float16 Considerations
-
-- Decoder frame sizes are limited to avoid float16 overflow in HiFi-GAN upscaling layers
-- Large frame sizes (>2048) may cause register overflow errors
+1. **RKNN BERT compatibility**: Encoder requires BERT embeddings in specific UNDEFINED layout format (currently blocking RKNN inference)
+2. **No quantization**: Models use float16 for full quality
+3. **Fixed output length**: Encoder uses max_frames=2048 for RKNN compatibility
+4. **No SDP**: Stochastic Duration Predictor excluded (deterministic only)
+5. **BERT on CPU**: BERT inference runs on CPU (fast enough)
+6. **Large encoder**: RKNN encoder is ~900MB due to float16 and dynamic profiles
 
 ## Troubleshooting
 
@@ -324,6 +302,22 @@ Check internet connection and HuggingFace access:
 ```bash
 huggingface-cli login
 ```
+
+### RKNN BERT Input Issues
+
+**Status:** Known issue with BERT embedding format in RKNN encoder
+
+**Symptom:** Encoder inference fails with BERT input shape error
+
+**Workaround:** Use ONNX inference instead
+
+```bash
+# Set environment variable in melotts-server
+export MELORTS_USE_ONNX=true
+python server.py
+```
+
+For detailed information, see [API Documentation](docs/API_DOCUMENTATION.md) and [RKNN Size Optimization](docs/RKNN_SIZE_OPTIMIZATION.md).
 
 ## License
 

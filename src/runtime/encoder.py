@@ -92,15 +92,35 @@ class RNNEncoder:
         """
         seq_len = phones.shape[1]
 
-        noise_scale_arr = np.array([noise_scale], dtype=np.float32).reshape(1, 1, 1)
-        length_scale_arr = np.array([length_scale], dtype=np.float32).reshape(1, 1, 1)
+        # Pad sequence to match RKNN dynamic profiles (64 or 128)
+        profile_seq_len = 64 if seq_len <= 64 else 128
+        
+        noise_scale_arr = np.array([noise_scale], dtype=np.float32)
+        length_scale_arr = np.array([length_scale], dtype=np.float32)
 
-        phones_nchw = phones.astype(np.int64).reshape(1, 1, seq_len)
-        tones_nchw = tones.astype(np.int64).reshape(1, 1, seq_len)
-        lang_ids_nchw = lang_ids.astype(np.int64).reshape(1, 1, seq_len)
+        # Pad or truncate to profile sequence length
+        if phones.shape[1] < profile_seq_len:
+            # Pad 2D arrays: pad_width = ((before, after), (before, after))
+            phones_padded = np.pad(phones, ((0, 0), (0, profile_seq_len - phones.shape[1])), mode='constant', constant_values=0)
+            tones_padded = np.pad(tones, ((0, 0), (0, profile_seq_len - tones.shape[1])), mode='constant', constant_values=0)
+            lang_ids_padded = np.pad(lang_ids, ((0, 0), (0, profile_seq_len - lang_ids.shape[1])), mode='constant', constant_values=0)
+            # Do NOT pad bert/ja_bert - they have UNDEFINED layout
+            bert_padded = bert
+            ja_bert_padded = ja_bert
+        else:
+            # Truncate if needed
+            phones_padded = phones[:, :profile_seq_len]
+            tones_padded = tones[:, :profile_seq_len]
+            lang_ids_padded = lang_ids[:, :profile_seq_len]
+            bert_padded = bert[:, :, :profile_seq_len]
+            ja_bert_padded = ja_bert[:, :, :profile_seq_len]
 
-        bert_nchw = bert.astype(np.float32)
-        ja_bert_nchw = ja_bert.astype(np.float32)
+        phones_nchw = phones_padded.astype(np.int64)
+        tones_nchw = tones_padded.astype(np.int64)
+        lang_ids_nchw = lang_ids_padded.astype(np.int64)
+
+        bert_nchw = bert_padded.astype(np.float32)
+        ja_bert_nchw = ja_bert_padded.astype(np.float32)
         g_nchw = g.astype(np.float32)
 
         inputs = [
