@@ -1,0 +1,94 @@
+[build-system]
+requires = ["setuptools>=61.0,<71", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rknn-converter"
+version = "0.1.0"
+description = "Download and convert HuggingFace models to RKNN format for Rockchip RK3588/RK3576"
+readme = "README.md"
+requires-python = ">=3.9,<3.13"
+license = {text = "MIT"}
+authors = [
+    {name = "RKNN Converter Team"}
+]
+keywords = ["rknn", "rockchip", "tts", "melotts", "npu"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "torch>=2.0.0",
+    "torchaudio>=2.0.0",
+    "onnx==1.18.0",
+    "onnxruntime>=1.16.0",
+    "click>=8.0.0",
+    "rich>=13.0.0",
+    "huggingface-hub>=0.20.0",
+    "transformers>=4.27.4",
+    "cached-path>=1.6.0",
+    "soundfile>=0.12.0",
+    "librosa>=0.9.1",
+    "g2p-en>=2.1.0",
+    "eng-to-ipa>=0.0.2",
+    "inflect>=7.0.0",
+    "anyascii>=0.3.2",
+    "pypinyin>=0.50.0",
+    "jieba>=0.42.1",
+    "cn2an>=0.5.22",
+    "fugashi>=1.4.0",
+    "pykakasi>=2.2.1",
+    "unidic-lite>=1.0.8",
+    "mecab-python3>=1.0.9",
+    "jamo>=0.4.1",
+    "g2pkk>=0.1.1",
+    "numpy>=1.24.0,<2.0.0",
+    "tqdm>=4.65.0",
+    "num2words>=0.5.12",
+    "packaging>=23.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+rknn-converter = "cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.txt", "*.json"]
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311', 'py312']
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W", "I", "N", "UP"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
