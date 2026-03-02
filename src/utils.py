@@ -1,4 +1,4 @@
-"""Utility functions for rknn-converter."""
+"""Utility functions for melotts-converter."""
 
 import hashlib
 import json

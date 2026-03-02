@@ -1,4 +1,4 @@
-"""CLI module for rknn-converter."""
+"""CLI module for melotts-converter."""
 
 from .main import cli
 

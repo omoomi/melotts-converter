@@ -294,7 +294,7 @@
   ],
   "num_tones": 16,
   "num_languages": 10,
-  "_rknn_converter": {
+  "_melotts_converter": {
     "language": "en",
     "huggingface_repo": "myshell-ai/MeloTTS-English",
     "voices": [

@@ -1,4 +1,4 @@
-"""CLI main entry point for rknn-converter."""
+"""CLI main entry point for melotts-converter."""
 
 import sys
 from pathlib import Path
@@ -12,10 +12,10 @@ console = Console()
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="rknn-converter")
+@click.version_option(version="0.1.0", prog_name="melotts-converter")
 def cli():
     """
-    RKNN Converter - Download and convert HuggingFace models to RKNN format.
+    MeloTTS Converter - Download and convert HuggingFace models to RKNN format.
 
     Convert MeloTTS text-to-speech models for deployment on Rockchip RK3588/RK3576.
     """
@@ -296,7 +296,7 @@ def info(language: str):
         table.add_row("Voices", ", ".join(lang_config.voices))
         table.add_row("BERT Dimension", str(lang_config.bert_dim))
 
-        if "_rknn_converter" in model_info:
+        if "_melotts_converter" in model_info:
             table.add_row("Downloaded", "Yes")
 
         console.print(table)

@@ -72,40 +72,40 @@ pip install rknn-toolkit2==2.3.2 --extra-index-url https://repo.rock-chips.com/p
 #### List Available Models
 
 ```bash
-rknn-converter list
+melotts-converter list
 ```
 
 #### Download Model
 
 ```bash
 # Download English model
-rknn-converter download --language en
+melotts-converter download --language en
 
 # Download Chinese model
-rknn-converter download --language zh
+melotts-converter download --language zh
 ```
 
 #### Export to ONNX
 
 ```bash
-rknn-converter export --language en
+melotts-converter export --language en
 ```
 
 #### Convert to RKNN
 
 ```bash
 # For RK3588
-rknn-converter convert --language en --target rk3588
+melotts-converter convert --language en --target rk3588
 
 # For RK3576
-rknn-converter convert --language en --target rk3576
+melotts-converter convert --language en --target rk3576
 ```
 
 #### Full Pipeline (Recommended)
 
 ```bash
 # Build complete model pipeline
-rknn-converter build --language en --target rk3588
+melotts-converter build --language en --target rk3588
 ```
 
 This will:
@@ -118,14 +118,14 @@ This will:
 
 ```bash
 # English
-rknn-converter inference \
+melotts-converter inference \
     --language en \
     --voice en-us \
     --text "Hello, this is a test." \
     --output test.wav
 
 # Chinese with mixed English
-rknn-converter inference \
+melotts-converter inference \
     --language zh \
     --voice zh \
     --text "我最近在学习machine learning。" \
@@ -135,7 +135,7 @@ rknn-converter inference \
 #### Show Model Info
 
 ```bash
-rknn-converter info --language en
+melotts-converter info --language en
 ```
 
 ### Python API
@@ -208,21 +208,7 @@ Audio Output
 ## Project Structure
 
 ```
-rknn-converter/
-├── src/
-│   ├── cli/           # CLI commands
-│   ├── core/          # Core conversion modules
-│   ├── runtime/       # Inference runtime
-│   ├── text/          # Text processing
-│   ├── config.py      # Configuration
-│   └── utils.py       # Utilities
-├── models/            # Downloaded/converted models
-│   ├── en/
-│   ├── zh/
-│   └── jp/
-├── tests/             # Unit tests
-├── pyproject.toml     # Package configuration
-└── README.md
+melotts-converter/
 ```
 
 ## Model Files

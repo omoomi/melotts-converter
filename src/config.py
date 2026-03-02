@@ -1,4 +1,4 @@
-"""Configuration management for rknn-converter."""
+"""Configuration management for melotts-converter."""
 
 import os
 from dataclasses import dataclass, field
@@ -104,7 +104,7 @@ class Config:
         cache_dir: Optional[Path] = None,
     ):
         self.models_dir = models_dir or Path.cwd() / "models"
-        self.cache_dir = cache_dir or Path.home() / ".cache" / "rknn-converter"
+        self.cache_dir = cache_dir or Path.home() / ".cache" / "melotts-converter"
         self.model_config = ModelConfig()
         self.rknn_config = RKNNConfig()
 

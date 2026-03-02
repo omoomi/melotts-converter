@@ -99,7 +99,7 @@ class ModelDownloader:
         else:
             config_data = {}
 
-        config_data["_rknn_converter"] = {
+        config_data["_melotts_converter"] = {
             "language": language,
             "huggingface_repo": lang_config.huggingface_repo,
             "voices": lang_config.voices,

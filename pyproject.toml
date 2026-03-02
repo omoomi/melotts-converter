@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0,<71", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rknn-converter"
+name = "melotts-converter"
 version = "0.1.0"
 description = "Download and convert HuggingFace models to RKNN format for Rockchip RK3588/RK3576"
 readme = "README.md"
 requires-python = ">=3.9,<3.13"
 license = {text = "MIT"}
 authors = [
-    {name = "RKNN Converter Team"}
+    {name = "MeloTTS Converter Team"}
 ]
 keywords = ["rknn", "rockchip", "tts", "melotts", "npu"]
 classifiers = [
@@ -65,7 +65,7 @@ dev = [
 ]
 
 [project.scripts]
-rknn-converter = "cli.main:cli"
+melotts-converter = "cli.main:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
