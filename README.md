@@ -241,10 +241,22 @@ models/en/
 | File | Size | Description |
 |------|------|-------------|
 | checkpoint.pth | ~200 MB | PyTorch checkpoint |
-| encoder.onnx | ~110 MB | ONNX encoder |
-| decoder.onnx | ~58 MB | ONNX decoder |
-| encoder.rknn | ~1.3 GB | RKNN encoder (NPU) |
-| decoder.rknn | ~180 MB | RKNN decoder (NPU) |
+| encoder.onnx | ~105 MB | ONNX encoder |
+| decoder.onnx | ~56 MB | ONNX decoder |
+| encoder.rknn | ~900 MB | RKNN encoder (2 dynamic profiles) |
+| decoder.rknn | ~155 MB | RKNN decoder (2 dynamic profiles) |
+
+**Why is RKNN larger than ONNX?**
+
+RKNN models are 5-12x larger than ONNX due to:
+1. **Dynamic input profiles**: Each profile stores a separate optimized graph (2 profiles = 2x size)
+2. **NPU optimization**: Pre-computed operations and NPU-specific kernels
+3. **No compression**: RKNN stores raw float16 weights, while ONNX uses protobuf compression
+
+To reduce size:
+- Use fewer dynamic profiles (edit `src/config.py`)
+- Use a single static profile (~500 MB encoder)
+- Enable quantization (`do_quantization=True`)
 
 ## Requirements
 
