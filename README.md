@@ -10,8 +10,17 @@ Download and convert MeloTTS text-to-speech models from HuggingFace to RKNN form
 | ONNX export | ✅ Working |
 | RKNN conversion | ✅ Working |
 | CLI commands | ✅ Working |
-| Python runtime | 🔄 In progress |
+| **Critical fixes** | ✅ **Applied** |
+| Python runtime | ✅ Fixed |
 | Inference testing | ⬜ Not tested on device |
+
+**Latest Update** (March 2, 2026):
+- ✅ Fixed critical runtime interface mismatch (encoder now uses 8 inputs)
+- ✅ Fixed resource leaks in RKNN converter
+- ✅ Replaced bare except clauses with proper exception handling
+- ✅ Added production-ready logging throughout codebase
+
+See [Critical Fixes Applied](docs/CRITICAL_FIXES_APPLIED.md) for details.
 
 ## Features
 
