@@ -1,4 +1,13 @@
-"""CLI main entry point for melotts-converter."""
+"""CLI main entry point for melotts-converter.
+
+This module provides the command-line interface for downloading, exporting,
+converting, and using MeloTTS models in RKNN format for Rockchip NPU hardware.
+
+Example:
+    $ melotts-converter list
+    $ melotts-converter build --language en --target rk3588
+    $ melotts-converter inference --language en --voice en-us --text "Hello" --output test.wav
+"""
 
 import sys
 from pathlib import Path
@@ -14,8 +23,7 @@ console = Console()
 @click.group()
 @click.version_option(version="0.1.0", prog_name="melotts-converter")
 def cli():
-    """
-    MeloTTS Converter - Download and convert HuggingFace models to RKNN format.
+    """MeloTTS Converter - Download and convert HuggingFace models to RKNN format.
 
     Convert MeloTTS text-to-speech models for deployment on Rockchip RK3588/RK3576.
     """
@@ -32,7 +40,19 @@ def cli():
 )
 @click.option("--force", "-f", is_flag=True, help="Force re-download")
 def download(language: str, force: bool):
-    """Download model from HuggingFace."""
+    """Download model from HuggingFace.
+
+    Downloads the MeloTTS model checkpoint and config for the specified language
+    from HuggingFace and saves them to the models directory.
+
+    Args:
+        language: Language code ('en', 'zh', 'jp').
+        force: Force re-download even if files exist.
+
+    Example:
+        $ melotts-converter download --language en
+        $ melotts-converter download -l zh --force
+    """
     from config import Config
     from core.downloader import ModelDownloader
 
@@ -63,7 +83,19 @@ def download(language: str, force: bool):
     help="Output directory",
 )
 def export(language: str, output_dir: Optional[str]):
-    """Export PyTorch model to ONNX format."""
+    """Export PyTorch model to ONNX format.
+
+    Exports the downloaded MeloTTS model to ONNX format, which is an intermediate
+    format before conversion to RKNN.
+
+    Args:
+        language: Language code ('en', 'zh').
+        output_dir: Custom output directory. If None, uses models/{language}.
+
+    Example:
+        $ melotts-converter export --language en
+        $ melotts-converter export -l zh -o /path/to/output
+    """
     from config import Config
     from core.exporter import ONNXExporter
 
@@ -103,7 +135,20 @@ def export(language: str, output_dir: Optional[str]):
     help="Output directory",
 )
 def convert(language: str, target: str, output_dir: Optional[str]):
-    """Convert ONNX model to RKNN format."""
+    """Convert ONNX model to RKNN format.
+
+    Converts the ONNX model to RKNN format for NPU acceleration on Rockchip
+    hardware. Requires ONNX models to be exported first.
+
+    Args:
+        language: Language code ('en', 'zh').
+        target: Target platform ('rk3588' or 'rk3576').
+        output_dir: Custom output directory. If None, uses models/{language}.
+
+    Example:
+        $ melotts-converter convert --language en --target rk3588
+        $ melotts-converter convert -l zh -t rk3576 -o /path/to/output
+    """
     from config import Config
     from core.converter import RKNNConverter
 
@@ -137,7 +182,23 @@ def convert(language: str, target: str, output_dir: Optional[str]):
 )
 @click.option("--force", "-f", is_flag=True, help="Force re-download")
 def build(language: str, target: str, force: bool):
-    """Full pipeline: download, export, and convert."""
+    """Full pipeline: download, export, and convert.
+
+    Runs the complete pipeline to prepare models for inference:
+    1. Download model from HuggingFace
+    2. Export to ONNX format
+    3. Extract voice embeddings
+    4. Convert to RKNN format
+
+    Args:
+        language: Language code ('en', 'zh').
+        target: Target platform ('rk3588' or 'rk3576').
+        force: Force re-download even if files exist.
+
+    Example:
+        $ melotts-converter build --language en --target rk3588
+        $ melotts-converter build -l zh -t rk3576 --force
+    """
     from config import Config
     from core.converter import RKNNConverter
     from core.downloader import ModelDownloader
@@ -170,7 +231,13 @@ def build(language: str, target: str, force: bool):
 
 @cli.command()
 def list_models():
-    """List available and downloaded models."""
+    """List available and downloaded models.
+
+    Shows all supported languages and their download status.
+
+    Example:
+        $ melotts-converter list
+    """
     from config import Config
     from core.downloader import ModelDownloader
 
@@ -234,7 +301,22 @@ def list_models():
     help="Speech speed multiplier",
 )
 def inference(language: str, voice: Optional[str], text: str, output: str, speed: float):
-    """Run TTS inference on RKNN models."""
+    """Run TTS inference on RKNN models.
+
+    Synthesizes speech from text using the converted RKNN models.
+    Requires the build pipeline to be completed first.
+
+    Args:
+        language: Language code ('en', 'zh').
+        voice: Voice name to use. If None, uses the first available voice.
+        text: Text to synthesize (required).
+        output: Output audio file path (default: 'output.wav').
+        speed: Speech speed multiplier (default: 1.0).
+
+    Example:
+        $ melotts-converter inference --language en --voice en-us --text "Hello world!" --output test.wav
+        $ melotts-converter inference -l zh -t "你好世界" -o test_zh.wav --speed 1.2
+    """
     from config import Config
     from runtime.tts import TTS
 
@@ -271,7 +353,18 @@ def inference(language: str, voice: Optional[str], text: str, output: str, speed
     help="Language info to show",
 )
 def info(language: str):
-    """Show model information."""
+    """Show model information.
+
+    Displays detailed information about a downloaded model including
+    configuration parameters and file sizes.
+
+    Args:
+        language: Language code ('en', 'zh').
+
+    Example:
+        $ melotts-converter info --language en
+        $ melotts-converter info -l zh
+    """
     from config import Config
     from core.downloader import ModelDownloader
 

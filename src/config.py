@@ -1,4 +1,15 @@
-"""Configuration management for melotts-converter."""
+"""Configuration management for melotts-converter.
+
+This module provides configuration classes for managing model settings,
+language configurations, and RKNN conversion parameters.
+
+Example:
+    >>> from config import Config
+    >>> config = Config()
+    >>> lang_config = config.get_language_config('en')
+    >>> print(lang_config.name)
+    'English'
+"""
 
 import os
 from dataclasses import dataclass, field
@@ -10,7 +21,24 @@ from packaging.version import Version
 
 @dataclass
 class LanguageConfig:
-    """Configuration for a specific language."""
+    """Configuration for a specific language model.
+
+    Attributes:
+        name: Human-readable language name.
+        huggingface_repo: HuggingFace repository ID for the model.
+        voices: List of available voice names for this language.
+        sample_rate: Audio sample rate in Hz (default: 44100).
+        bert_dim: BERT embedding dimension (default: 1024).
+        num_languages: Number of supported languages (default: 1).
+        num_tones: Number of tone levels (default: 1).
+
+    Example:
+        >>> config = LanguageConfig(
+        ...     name="English",
+        ...     huggingface_repo="myshell-ai/MeloTTS-English",
+        ...     voices=["en-us", "en-br", "en-india"]
+        ... )
+    """
 
     name: str
     huggingface_repo: str
@@ -23,7 +51,26 @@ class LanguageConfig:
 
 @dataclass
 class ModelConfig:
-    """Configuration for model architecture."""
+    """Configuration for model architecture parameters.
+
+    Attributes:
+        inter_channels: Internal channels for the model (default: 192).
+        hidden_channels: Hidden layer dimensions (default: 192).
+        filter_channels: Filter dimensions for convolutional layers (default: 768).
+        n_heads: Number of attention heads (default: 2).
+        n_layers: Number of encoder layers (default: 6).
+        kernel_size: Kernel size for convolutions (default: 3).
+        p_dropout: Dropout probability (default: 0.1).
+        resblock: Residual block type ('1' or '2', default: '1').
+        resblock_kernel_sizes: Kernel sizes for residual blocks.
+        resblock_dilation_sizes: Dilation rates for residual blocks.
+        upsample_rates: Upsampling rates for the decoder.
+        upsample_initial_channel: Initial channel count for upsampling (default: 512).
+        upsample_kernel_sizes: Kernel sizes for upsampling layers.
+        n_layers_trans_flow: Number of transformer flow layers (default: 6).
+        gin_channels: Speaker conditioning channels (default: 256).
+        n_speakers: Number of speakers in the model (default: 256).
+    """
 
     inter_channels: int = 192
     hidden_channels: int = 192
@@ -47,7 +94,18 @@ class ModelConfig:
 
 @dataclass
 class RKNNConfig:
-    """Configuration for RKNN conversion."""
+    """Configuration for RKNN conversion and optimization.
+
+    Attributes:
+        target_platform: Target NPU platform ('rk3588' or 'rk3576', default: 'rk3588').
+        float_dtype: Floating-point data type ('float16' or 'float32', default: 'float16').
+        optimization_level: RKNN optimization level (0-3, default: 3).
+        do_quantization: Whether to apply quantization (default: False).
+        quantized_dtype: Quantization data type ('w8a8' for 8-bit, default: 'w8a8').
+        encoder_max_frames: Maximum number of frames for encoder (default: 2048).
+        dynamic_input_profiles: List of dynamic input profiles for RKNN conversion.
+            Each profile defines input dimensions for different sequence lengths.
+    """
 
     target_platform: str = "rk3588"
     float_dtype: str = "float16"
@@ -55,7 +113,7 @@ class RKNNConfig:
     do_quantization: bool = False
     quantized_dtype: str = "w8a8"
     encoder_max_frames: int = 2048
-    
+
     dynamic_input_profiles: List[Dict] = field(default_factory=lambda: [
         {"seq_len": 64, "frames": 1024},
         {"seq_len": 128, "frames": 2048},
@@ -63,7 +121,27 @@ class RKNNConfig:
 
 
 class Config:
-    """Main configuration class."""
+    """Main configuration class for melotts-converter.
+
+    This class manages all configuration settings including language models,
+    model architecture parameters, and RKNN conversion settings.
+
+    Attributes:
+        models_dir: Directory for storing model files (default: ./models).
+        cache_dir: Directory for caching downloads (default: ~/.cache/melotts-converter).
+        model_config: Model architecture configuration.
+        rknn_config: RKNN conversion configuration.
+        SUPPORTED_LANGUAGES: Dictionary of supported language configurations.
+        REQUIRED_ONNX_VERSION: Required ONNX version (1.18.0).
+        REQUIRED_RKNN_VERSION: Required RKNN version (2.3.2).
+
+    Example:
+        >>> config = Config()
+        >>> config.models_dir
+        PosixPath('models')
+        >>> config.get_language_config('en').name
+        'English'
+    """
 
     SUPPORTED_LANGUAGES = {
         "en": LanguageConfig(
@@ -103,6 +181,12 @@ class Config:
         models_dir: Optional[Path] = None,
         cache_dir: Optional[Path] = None,
     ):
+        """Initialize configuration.
+
+        Args:
+            models_dir: Directory for storing model files. If None, uses ./models.
+            cache_dir: Directory for caching downloads. If None, uses ~/.cache/melotts-converter.
+        """
         self.models_dir = models_dir or Path.cwd() / "models"
         self.cache_dir = cache_dir or Path.home() / ".cache" / "melotts-converter"
         self.model_config = ModelConfig()
@@ -112,7 +196,23 @@ class Config:
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
     def get_language_config(self, language: str) -> LanguageConfig:
-        """Get configuration for a specific language."""
+        """Get configuration for a specific language.
+
+        Args:
+            language: Language code ('en', 'zh', 'jp').
+
+        Returns:
+            LanguageConfig object for the specified language.
+
+        Raises:
+            ValueError: If the language is not supported.
+
+        Example:
+            >>> config = Config()
+            >>> lang_config = config.get_language_config('en')
+            >>> print(lang_config.name)
+            'English'
+        """
         lang_key = language.lower()
         if lang_key not in self.SUPPORTED_LANGUAGES:
             raise ValueError(
@@ -122,14 +222,48 @@ class Config:
         return self.SUPPORTED_LANGUAGES[lang_key]
 
     def get_model_dir(self, language: str) -> Path:
-        """Get the model directory for a language."""
+        """Get the model directory for a language.
+
+        Args:
+            language: Language code ('en', 'zh', 'jp').
+
+        Returns:
+            Path object pointing to the model directory.
+
+        Example:
+            >>> config = Config()
+            >>> config.get_model_dir('en')
+            PosixPath('models/en')
+        """
         return self.models_dir / language.lower()
 
     def get_voice_path(self, language: str, voice: str) -> Path:
-        """Get the path to a voice embedding file."""
+        """Get the path to a voice embedding file.
+
+        Args:
+            language: Language code ('en', 'zh', 'jp').
+            voice: Voice name (e.g., 'en-us', 'zh').
+
+        Returns:
+            Path object pointing to the voice embedding file.
+
+        Example:
+            >>> config = Config()
+            >>> config.get_voice_path('en', 'en-us')
+            PosixPath('models/en/voices/en-us.bin')
+        """
         return self.get_model_dir(language) / "voices" / f"{voice}.bin"
 
     @staticmethod
     def get_default_config() -> "Config":
-        """Get default configuration."""
+        """Get default configuration instance.
+
+        Returns:
+            A new Config object with default settings.
+
+        Example:
+            >>> config = Config.get_default_config()
+            >>> config.models_dir
+            PosixPath('models')
+        """
         return Config()
