@@ -1,5 +1,6 @@
 """MeloTTS model architecture - SynthesizerTrn and components."""
 
+import logging
 import math
 import torch
 from torch import nn
@@ -11,6 +12,8 @@ import commons
 import modules
 import attentions
 from commons import init_weights, get_padding
+
+logger = logging.getLogger(__name__)
 
 
 LRELU_SLOPE = 0.1
@@ -538,7 +541,7 @@ class Generator(torch.nn.Module):
         return x
 
     def remove_weight_norm(self):
-        print("Removing weight norm...")
+        logger.info("Removing weight norm...")
         for layer in self.ups:
             remove_weight_norm(layer)
         for layer in self.resblocks:

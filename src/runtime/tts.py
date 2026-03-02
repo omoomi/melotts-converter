@@ -93,8 +93,6 @@ class TTS:
         voice: Optional[str] = None,
         speed: float = 1.0,
         noise_scale: float = 0.667,
-        noise_scale_w: float = 0.8,
-        sdp_ratio: float = 0.2,
     ) -> np.ndarray:
         """
         Generate audio from text.
@@ -104,8 +102,6 @@ class TTS:
             voice: Voice name (default: first available voice)
             speed: Speech speed multiplier
             noise_scale: Noise scale for audio quality
-            noise_scale_w: Noise scale for duration
-            sdp_ratio: Stochastic duration predictor ratio
 
         Returns:
             Audio samples as numpy array
@@ -155,17 +151,18 @@ class TTS:
 
                 bert = self._bert_encoder.encode_for_tts(sentence, seq_len)
                 bert = bert.reshape(1, -1, seq_len)
+                
+                ja_bert = np.zeros((1, 768, seq_len), dtype=np.float32)
 
                 z, y_mask, audio_len = self._encoder.infer(
                     phones=phones_arr,
                     tones=tones_arr,
                     lang_ids=lang_ids_arr,
                     bert=bert,
+                    ja_bert=ja_bert,
                     g=g,
                     noise_scale=noise_scale,
                     length_scale=1.0 / speed,
-                    noise_scale_w=noise_scale_w,
-                    sdp_ratio=sdp_ratio,
                 )
 
                 audio = self._decoder.infer_long(z, g, audio_len)
@@ -190,8 +187,6 @@ class TTS:
         voice: Optional[str] = None,
         speed: float = 1.0,
         noise_scale: float = 0.667,
-        noise_scale_w: float = 0.8,
-        sdp_ratio: float = 0.2,
         format: Optional[str] = None,
     ) -> Path:
         """
@@ -202,9 +197,7 @@ class TTS:
             voice: Voice name
             output_path: Output file path
             speed: Speech speed multiplier
-            noise_scale: Noise scale
-            noise_scale_w: Duration noise scale
-            sdp_ratio: SDP ratio
+            noise_scale: Noise scale for audio quality
             format: Audio format (wav, flac, etc.)
 
         Returns:
@@ -217,8 +210,6 @@ class TTS:
             voice=voice,
             speed=speed,
             noise_scale=noise_scale,
-            noise_scale_w=noise_scale_w,
-            sdp_ratio=sdp_ratio,
         )
 
         sf.write(output_path, audio, self.sample_rate, format=format)

@@ -1,5 +1,6 @@
 """Chinese text processing with mixed English support."""
 
+import logging
 import re
 from typing import List, Tuple
 
@@ -10,6 +11,7 @@ from pypinyin import Style, pinyin
 from .symbols import CHINESE_SYMBOLS, ENGLISH_SYMBOLS, symbol_to_id
 
 jieba.setLogLevel(20)
+logger = logging.getLogger(__name__)
 
 
 def normalize_numbers_zh(text: str) -> str:
@@ -21,7 +23,8 @@ def normalize_numbers_zh(text: str) -> str:
                 return num2words(float(num_str), lang="zh")
             else:
                 return num2words(int(num_str), lang="zh")
-        except:
+        except (ValueError, TypeError) as e:
+            logger.debug(f"Failed to convert number '{num_str}': {e}")
             return num_str
 
     text = re.sub(r"\d+\.?\d*", replace_number, text)

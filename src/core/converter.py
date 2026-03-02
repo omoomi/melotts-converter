@@ -111,32 +111,34 @@ class RKNNConverter:
 
         rknn = RKNN(verbose=False)
 
-        rknn.config(
-            target_platform=target_platform,
-            float_dtype="float16",
-            optimization_level=self.config.rknn_config.optimization_level,
-            single_core_mode=False,
-            dynamic_input=self._get_encoder_dynamic_inputs(),
-        )
+        try:
+            rknn.config(
+                target_platform=target_platform,
+                float_dtype="float16",
+                optimization_level=self.config.rknn_config.optimization_level,
+                single_core_mode=False,
+                dynamic_input=self._get_encoder_dynamic_inputs(),
+            )
 
-        ret = rknn.load_onnx(model=str(onnx_path))
-        if ret != 0:
-            raise RuntimeError(f"Failed to load ONNX model: {onnx_path}")
+            ret = rknn.load_onnx(model=str(onnx_path))
+            if ret != 0:
+                raise RuntimeError(f"Failed to load ONNX model: {onnx_path} (error code: {ret})")
 
-        ret = rknn.build(do_quantization=False)
-        if ret != 0:
-            raise RuntimeError(f"Failed to build RKNN model")
+            ret = rknn.build(do_quantization=False)
+            if ret != 0:
+                raise RuntimeError(f"Failed to build RKNN model (error code: {ret})")
 
-        ret = rknn.export_rknn(str(rknn_path))
-        if ret != 0:
-            raise RuntimeError(f"Failed to export RKNN model")
+            ret = rknn.export_rknn(str(rknn_path))
+            if ret != 0:
+                raise RuntimeError(f"Failed to export RKNN model (error code: {ret})")
 
-        rknn.release()
+            if not quiet:
+                console.print(f"    [green]✓[/green] Saved to {rknn_path} ({rknn_path.stat().st_size / 1024 / 1024:.1f} MB)")
 
-        if not quiet:
-            console.print(f"    [green]✓[/green] Saved to {rknn_path} ({rknn_path.stat().st_size / 1024 / 1024:.1f} MB)")
+            return rknn_path
 
-        return rknn_path
+        finally:
+            rknn.release()
 
     def _convert_decoder(
         self,
@@ -155,32 +157,34 @@ class RKNNConverter:
 
         rknn = RKNN(verbose=False)
 
-        rknn.config(
-            target_platform=target_platform,
-            float_dtype="float16",
-            optimization_level=self.config.rknn_config.optimization_level,
-            single_core_mode=False,
-            dynamic_input=self._get_decoder_dynamic_inputs(),
-        )
+        try:
+            rknn.config(
+                target_platform=target_platform,
+                float_dtype="float16",
+                optimization_level=self.config.rknn_config.optimization_level,
+                single_core_mode=False,
+                dynamic_input=self._get_decoder_dynamic_inputs(),
+            )
 
-        ret = rknn.load_onnx(model=str(onnx_path))
-        if ret != 0:
-            raise RuntimeError(f"Failed to load ONNX model: {onnx_path}")
+            ret = rknn.load_onnx(model=str(onnx_path))
+            if ret != 0:
+                raise RuntimeError(f"Failed to load ONNX model: {onnx_path} (error code: {ret})")
 
-        ret = rknn.build(do_quantization=False)
-        if ret != 0:
-            raise RuntimeError(f"Failed to build RKNN model")
+            ret = rknn.build(do_quantization=False)
+            if ret != 0:
+                raise RuntimeError(f"Failed to build RKNN model (error code: {ret})")
 
-        ret = rknn.export_rknn(str(rknn_path))
-        if ret != 0:
-            raise RuntimeError(f"Failed to export RKNN model")
+            ret = rknn.export_rknn(str(rknn_path))
+            if ret != 0:
+                raise RuntimeError(f"Failed to export RKNN model (error code: {ret})")
 
-        rknn.release()
+            if not quiet:
+                console.print(f"    [green]✓[/green] Saved to {rknn_path} ({rknn_path.stat().st_size / 1024 / 1024:.1f} MB)")
 
-        if not quiet:
-            console.print(f"    [green]✓[/green] Saved to {rknn_path} ({rknn_path.stat().st_size / 1024 / 1024:.1f} MB)")
+            return rknn_path
 
-        return rknn_path
+        finally:
+            rknn.release()
 
     def _get_encoder_dynamic_inputs(self) -> List[List[List[int]]]:
         """Get dynamic input profiles for encoder."""

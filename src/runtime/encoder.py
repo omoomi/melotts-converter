@@ -64,11 +64,10 @@ class RNNEncoder:
         tones: np.ndarray,
         lang_ids: np.ndarray,
         bert: np.ndarray,
+        ja_bert: np.ndarray,
         g: np.ndarray,
         noise_scale: float = 0.667,
         length_scale: float = 1.0,
-        noise_scale_w: float = 0.8,
-        sdp_ratio: float = 0.2,
     ) -> Tuple[np.ndarray, np.ndarray, int]:
         """
         Run encoder inference.
@@ -78,11 +77,10 @@ class RNNEncoder:
             tones: Tone IDs [1, seq_len]
             lang_ids: Language IDs [1, seq_len]
             bert: BERT embeddings [1, bert_dim, seq_len]
+            ja_bert: Japanese BERT embeddings [1, 768, seq_len]
             g: Speaker embedding [1, 256, 1]
-            noise_scale: Noise scale
-            length_scale: Length scale
-            noise_scale_w: Duration noise scale
-            sdp_ratio: SDP ratio
+            noise_scale: Noise scale for flow
+            length_scale: Length scale for duration
 
         Returns:
             z: Latent representation [1, 192, audio_frames]
@@ -91,19 +89,16 @@ class RNNEncoder:
         """
         noise_scale_arr = np.array([noise_scale], dtype=np.float32)
         length_scale_arr = np.array([length_scale], dtype=np.float32)
-        noise_scale_w_arr = np.array([noise_scale_w], dtype=np.float32)
-        sdp_ratio_arr = np.array([sdp_ratio], dtype=np.float32)
 
         inputs = [
             phones.astype(np.int32),
             tones.astype(np.int32),
             lang_ids.astype(np.int32),
             bert.astype(np.float32),
+            ja_bert.astype(np.float32),
             g.astype(np.float32),
             noise_scale_arr,
             length_scale_arr,
-            noise_scale_w_arr,
-            sdp_ratio_arr,
         ]
 
         outputs = self.rknn.inference(inputs=inputs)
