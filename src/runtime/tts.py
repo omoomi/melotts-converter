@@ -217,6 +217,8 @@ class TTS:
                 tones_arr = np.array(tones, dtype=np.int32).reshape(1, -1)
                 lang_ids_arr = np.array(lang_ids, dtype=np.int32).reshape(1, -1)
 
+                logger.debug(f"Processed sentence: seq_len={seq_len}, text_length={len(sentence)}")
+
                 bert = self._bert_encoder.encode_for_tts(sentence, seq_len)
                 bert = bert.reshape(1, -1, seq_len)
 

@@ -70,33 +70,46 @@ class RNNEncoder:
         length_scale: float = 1.0,
     ) -> Tuple[np.ndarray, np.ndarray, int]:
         """
-        Run encoder inference.
+        Run encoder inference with NCHW-compliant inputs.
+
+        Inputs are automatically reshaped to NCHW format [Batch, Channel, Height]
+        for RKNN NPU compatibility.
 
         Args:
-            phones: Phone IDs [1, seq_len]
-            tones: Tone IDs [1, seq_len]
-            lang_ids: Language IDs [1, seq_len]
-            bert: BERT embeddings [1, bert_dim, seq_len]
-            ja_bert: Japanese BERT embeddings [1, 768, seq_len]
-            g: Speaker embedding [1, 256, 1]
-            noise_scale: Noise scale for flow
-            length_scale: Length scale for duration
+            phones: Phone IDs [1, seq_len] - will be reshaped to [1, 1, seq_len]
+            tones: Tone IDs [1, seq_len] - will be reshaped to [1, 1, seq_len]
+            lang_ids: Language IDs [1, seq_len] - will be reshaped to [1, 1, seq_len]
+            bert: BERT embeddings [1, bert_dim, seq_len] - already NCHW
+            ja_bert: Japanese BERT embeddings [1, 768, seq_len] - already NCHW
+            g: Speaker embedding [1, 256, 1] - already NCHW
+            noise_scale: Noise scale for flow (default: 0.667)
+            length_scale: Length scale for duration (default: 1.0)
 
         Returns:
             z: Latent representation [1, 192, audio_frames]
             y_mask: Mask [1, 1, audio_frames]
-            audio_len: Audio length
+            audio_len: Audio length in samples
         """
-        noise_scale_arr = np.array([noise_scale], dtype=np.float32)
-        length_scale_arr = np.array([length_scale], dtype=np.float32)
+        seq_len = phones.shape[1]
+
+        noise_scale_arr = np.array([noise_scale], dtype=np.float32).reshape(1, 1, 1)
+        length_scale_arr = np.array([length_scale], dtype=np.float32).reshape(1, 1, 1)
+
+        phones_nchw = phones.astype(np.int64).reshape(1, 1, seq_len)
+        tones_nchw = tones.astype(np.int64).reshape(1, 1, seq_len)
+        lang_ids_nchw = lang_ids.astype(np.int64).reshape(1, 1, seq_len)
+
+        bert_nchw = bert.astype(np.float32)
+        ja_bert_nchw = ja_bert.astype(np.float32)
+        g_nchw = g.astype(np.float32)
 
         inputs = [
-            phones.astype(np.int32),
-            tones.astype(np.int32),
-            lang_ids.astype(np.int32),
-            bert.astype(np.float32),
-            ja_bert.astype(np.float32),
-            g.astype(np.float32),
+            phones_nchw,
+            tones_nchw,
+            lang_ids_nchw,
+            bert_nchw,
+            ja_bert_nchw,
+            g_nchw,
             noise_scale_arr,
             length_scale_arr,
         ]
@@ -106,6 +119,8 @@ class RNNEncoder:
         z = outputs[0]
         y_mask = outputs[1]
         audio_len = int(outputs[2][0])
+
+        logger.debug(f"Encoder inference complete: seq_len={seq_len}, audio_len={audio_len}")
 
         return z, y_mask, audio_len
 
