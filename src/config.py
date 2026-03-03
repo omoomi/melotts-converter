@@ -115,8 +115,14 @@ class RKNNConfig:
     encoder_max_frames: int = 2048
 
     dynamic_input_profiles: List[Dict] = field(default_factory=lambda: [
-        {"seq_len": 64, "frames": 1024},
+        {"seq_len": 8,   "frames": 32},
+        {"seq_len": 16,  "frames": 64},
+        {"seq_len": 32,  "frames": 128},
+        {"seq_len": 48,  "frames": 256},
+        {"seq_len": 64,  "frames": 512},
+        {"seq_len": 96,  "frames": 1024},
         {"seq_len": 128, "frames": 2048},
+        {"seq_len": 192, "frames": 4096},
     ])
 
 
