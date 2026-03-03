@@ -17,7 +17,7 @@ class BERTEncoder:
     """Extract BERT embeddings for text."""
 
     BERT_MODELS = {
-        "en": "bert-base-uncased",
+        "en": "bert-large-uncased",
         "zh": "bert-base-chinese",
         "jp": "cl-tohoku/bert-base-japanese-v3",
     }

@@ -11,15 +11,27 @@ Download and convert MeloTTS text-to-speech models from HuggingFace to RKNN form
 | RKNN conversion | ✅ Working |
 | ONNX inference | ✅ Working |
 | RKNN inference | ⚠️ Partial (BERT issue) |
+| Hybrid ONNX+RKNN | ⚠️ Requires decoder reconversion |
 | CLI commands | ✅ Working |
 
-**Latest Update** (March 2, 2026):
-- ✅ All critical fixes applied to runtime
-- ✅ ONNX inference fully operational
-- ⚠️ RKNN encoder has BERT input format issue (see [API Documentation](docs/API_DOCUMENTATION.md))
-- ✅ Server integration complete with ONNX fallback
+**Latest Update** (March 3, 2026):
+- ✅ ONNX encoder/decoder implementation
+- ✅ Hybrid mode support (ONNX encoder + RKNN decoder)
+- ✅ BERT encoder fix (bert-large-uncased for 1024-dim compatibility)
+- ✅ Audio length calculation fix (y_mask-based)
+- ⚠️ RKNN encoder has BERT input format issue
+- ⚠️ RKNN decoder requires reconversion for hybrid mode
+- ✅ Server integration with mode switching
 
-**Recommendation:** Use ONNX inference for production deployment. RKNN acceleration available but blocked by BERT input format compatibility issue.
+**Recommendations:**
+- **Production:** Use ONNX mode (most stable, proven)
+- **Performance:** Use Hybrid mode with decoder reconversion (partial NPU acceleration)
+- **Future:** Use full RKNN mode after BERT encoder issue resolved
+
+**Documentation:**
+- [Hybrid Mode Guide](docs/HYBRID_MODE.md) - Hybrid mode implementation
+- [API Documentation](docs/API_DOCUMENTATION.md) - Detailed API reference
+- [RKNN Size Optimization](docs/RKNN_SIZE_OPTIMIZATION.md) - Model size analysis
 
 ## Features
 

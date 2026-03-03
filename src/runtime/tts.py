@@ -19,10 +19,14 @@ import soundfile as sf
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 
+import os
+
 from config import Config
 from runtime.bert_encoder import BERTEncoder
 from runtime.decoder import RKNNDecoder
+from runtime.decoder_onnx import ONNXDecoder
 from runtime.encoder import RNNEncoder
+from runtime.encoder_onnx import ONNXEncoder
 from runtime.text_processor import TextProcessor
 from utils import intersperse
 
@@ -103,22 +107,40 @@ class TTS:
             self._bert_encoder = BERTEncoder(self.language, self.config, self.device)
 
     def _init_encoder(self):
-        """Initialize RKNN encoder (lazy initialization).
+        """Initialize encoder (lazy initialization).
 
+        For ONNX mode, uses encoder.onnx. For hybrid mode, uses ONNX encoder + RKNN decoder.
         Raises:
-            FileNotFoundError: If encoder.rknn model file is not found.
+            FileNotFoundError: If encoder model file is not found.
         """
         if self._encoder is None:
+            use_onnx = os.getenv('MELORTS_USE_ONNX', '').lower() == 'true'
+
+            if use_onnx:
+                encoder_path = self.model_dir / "encoder.onnx"
+                if encoder_path.exists():
+                    self._encoder = ONNXEncoder(encoder_path, self.config)
+                    return
+
             encoder_path = self.model_dir / "encoder.rknn"
             self._encoder = RNNEncoder(encoder_path, self.config)
 
     def _init_decoder(self):
-        """Initialize RKNN decoder (lazy initialization).
+        """Initialize decoder (lazy initialization).
 
+        For ONNX mode, uses decoder.onnx. For RKNN/hybrid mode, uses decoder.rknn.
         Raises:
-            FileNotFoundError: If decoder.rknn model file is not found.
+            FileNotFoundError: If decoder model file is not found.
         """
         if self._decoder is None:
+            use_onnx = os.getenv('MELORTS_USE_ONNX', '').lower() == 'true'
+
+            if use_onnx:
+                decoder_path = self.model_dir / "decoder.onnx"
+                if decoder_path.exists():
+                    self._decoder = ONNXDecoder(decoder_path, self.config)
+                    return
+
             decoder_path = self.model_dir / "decoder.rknn"
             self._decoder = RKNNDecoder(decoder_path, self.config)
 
@@ -224,7 +246,7 @@ class TTS:
 
                 ja_bert = np.zeros((1, 768, seq_len), dtype=np.float32)
 
-                z, y_mask, audio_len = self._encoder.infer(
+                z, y_mask, _ = self._encoder.infer(
                     phones=phones_arr,
                     tones=tones_arr,
                     lang_ids=lang_ids_arr,
@@ -234,6 +256,9 @@ class TTS:
                     noise_scale=noise_scale,
                     length_scale=1.0 / speed,
                 )
+
+                HOP_LENGTH = 512
+                audio_len = int(np.sum(y_mask)) * HOP_LENGTH
 
                 audio = self._decoder.infer_long(z, g, audio_len)
 
