@@ -1,0 +1,28 @@
+name: '🧪 Qwen Code Test Trigger'
+
+on:
+  issue_comment:
+    types:
+      - 'created'
+
+jobs:
+  debug:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Debug event payload'
+        run: |
+          echo "Event name: ${{ github.event_name }}"
+          echo "Comment body: ${{ github.event.comment.body }}"
+          echo "Author association: ${{ github.event.comment.author_association }}"
+          echo "Sender type: ${{ github.event.sender.type }}"
+          echo "Issue number: ${{ github.event.issue.number }}"
+          
+      - name: 'Check if matches trigger'
+        run: |
+          BODY="${{ github.event.comment.body }}"
+          if [[ "$BODY" == @qwen-code* ]]; then
+            echo "✅ Comment starts with @qwen-code"
+          else
+            echo "❌ Comment does NOT start with @qwen-code"
+            echo "Body: $BODY"
+          fi
