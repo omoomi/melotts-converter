@@ -89,3 +89,10 @@ dmypy.json
 .env
 .env.local
 *.local
+
+# qwen-code settings
+.qwen/
+
+# GitHub App credentials
+gha-creds-*.json
+
