@@ -1,0 +1,39 @@
+name: '🧪 Test Comment Trigger'
+
+on:
+  issue_comment:
+    types:
+      - 'created'
+
+jobs:
+  test:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Debug comment event'
+        run: |
+          echo "=== EVENT DEBUG ==="
+          echo "Event: ${{ github.event_name }}"
+          echo "Action: ${{ github.event.action }}"
+          echo "Comment: ${{ github.event.comment.body }}"
+          echo "Author Association: ${{ github.event.comment.author_association }}"
+          echo "Sender: ${{ github.event.sender.login }}"
+          echo "Sender Type: ${{ github.event.sender.type }}"
+          echo "Issue Number: ${{ github.event.issue.number }}"
+          echo "Is PR: ${{ github.event.issue.pull_request != null }}"
+          echo "==================="
+          
+      - name: 'Post comment'
+        uses: 'actions/github-script@v7'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = context.payload.issue.number;
+            const comment = context.payload.comment.body;
+            const authorAssoc = context.payload.comment.author_association;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `🧪 **Test Response**\n\nReceived comment: "${comment}"\n\nAuthor association: **${authorAssoc}**\n\nWorkflow triggered successfully! ✅`
+            });
