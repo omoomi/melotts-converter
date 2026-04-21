@@ -1,6 +1,8 @@
 name: Qwen PR Review
 
 on:
+  pull_request:
+    types: [opened, reopened, synchronize]
   issue_comment:
     types: [created]
 
@@ -10,7 +12,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: qwen-pr-review-${{ github.event.issue.number }}
+  group: qwen-pr-review-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: false
 
 jobs:
@@ -18,9 +20,15 @@ jobs:
     name: Review Pull Request
     runs-on: ubuntu-latest
     if: >-
-      github.event.issue.pull_request &&
-      github.event.comment.body == '@qwencoder /review' &&
-      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository
+      ) || (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        github.event.comment.body == '@qwencoder /review' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      )
     steps:
       - name: Load PR metadata
         id: pr
@@ -29,7 +37,10 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const { owner, repo } = context.repo;
-            const pull_number = context.issue.number;
+            const pull_number =
+              context.eventName === "pull_request"
+                ? context.payload.pull_request.number
+                : context.issue.number;
             const pr = await github.rest.pulls.get({
               owner,
               repo,
@@ -42,6 +53,7 @@ jobs:
             core.setOutput("head_sha", pr.data.head.sha);
             core.setOutput("head_ref", pr.data.head.ref);
             core.setOutput("head_repo", pr.data.head.repo.full_name);
+            core.setOutput("title", pr.data.title);
             core.setOutput(
               "same_repo",
               String(pr.data.head.repo.full_name === `${owner}/${repo}`),
@@ -75,7 +87,7 @@ jobs:
           BASE_SHA: ${{ steps.pr.outputs.base_sha }}
           HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
-          PR_TITLE: ${{ github.event.issue.title }}
+          PR_TITLE: ${{ steps.pr.outputs.title }}
         run: |
           git diff --unified=3 "$BASE_SHA...$HEAD_SHA" > "$RUNNER_TEMP/pr.diff"
           git diff --stat "$BASE_SHA...$HEAD_SHA" > "$RUNNER_TEMP/pr.diffstat"
@@ -157,7 +169,7 @@ jobs:
           github-token: ${{ github.token }}
           script: |
             const { owner, repo } = context.repo;
-            const issue_number = context.issue.number;
+            const issue_number = Number("${{ steps.pr.outputs.number }}");
             const marker = "<!-- qwen-headless-pr-review -->";
             const body = process.env.REVIEW_BODY;
 
