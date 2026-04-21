@@ -114,13 +114,15 @@ jobs:
           test -n "$QWEN_BASE_URL"
           test -n "$QWEN_MODEL"
 
-          export OPENAI_API_KEY="$QWEN_API_KEY"
-          export OPENAI_BASE_URL="$QWEN_BASE_URL"
-          export OPENAI_MODEL="$QWEN_MODEL"
-
           cat "$RUNNER_TEMP/pr.diff" | qwen \
+            --auth-type openai \
+            --openai-api-key "$QWEN_API_KEY" \
+            --openai-base-url "$QWEN_BASE_URL" \
+            --model "$QWEN_MODEL" \
+            --channel CI \
+            --sandbox \
+            --approval-mode yolo \
             --prompt "$(cat "$RUNNER_TEMP/qwen-prompt.txt")" \
-            --all-files \
             --output-format json > "$RUNNER_TEMP/qwen-review.json"
 
       - name: Extract review text
