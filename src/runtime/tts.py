@@ -160,8 +160,8 @@ class TTS:
         if not voice_path.exists():
             raise FileNotFoundError(f"Voice embedding not found: {voice_path}")
 
-        emb = np.fromfile(voice_path, dtype=np.float32)
-        return emb.reshape(1, 256, 1)
+        emb = np.fromfile(voice_path, dtype=np.float16)
+        return emb.reshape(1, 128, 1)
 
     def infer(
         self,
